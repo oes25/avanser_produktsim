@@ -116,6 +116,7 @@ def beam2local_def_disp(ex, ey, disp_global):
                                theta2_def])
     return def_disp_local
 
+
 def L_deformed(ex, ey, disp_global):
     """
 
@@ -175,8 +176,6 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     # Length of element before deformation
     L = L0  # I denne konteksten?
     Kle = beam2local_stiff(L, ep)
-    fle = Kle @ v_local
-    T_mat = beam2corot_Te(ex, ey)
 
     # Material
     Ke_mat = beam2local_stiff(L0, ep)
@@ -283,7 +282,12 @@ def beam2e(ex, ey, ep, eq=None):
 
     Kle = beam2local_stiff(L,ep)
 
-    fle = L * np.mat([qx / 2, qy / 2, qy * L / 12, qx / 2, qy / 2, -qy * L / 12]).T
+    fle = L * np.mat([qx / 2,
+                      qy / 2,
+                      qy * L / 12,
+                      qx / 2,
+                      qy / 2,
+                      -qy * L / 12]).T
 
     Te = beam2corot_Te(ex,ey)
 
