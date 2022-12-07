@@ -116,6 +116,35 @@ def beam2local_def_disp(ex, ey, disp_global):
                                theta2_def])
     return def_disp_local
 
+def L_deformed(ex, ey, disp_global):
+    """
+
+    :param ex: element x coordinate [x1, x2] in undeformed position
+    :param ey: element y coordinate [y1, y2] in undeformed position
+    :param disp_global:  displacement vector [u1, v1, r1, u2, v2, r2] in global directions
+    :return: disp_local_def: displacement vector [u1, v1, r1, u2, v2, r2] in local directions
+    """
+    eVec12 = np.array([ex[1] - ex[0], ey[1] - ey[0]])  # ex0
+
+    # L0 = math.sqrt(eVec12 @ eVec12)
+    L0 = np.linalg.norm(eVec12)
+
+    ex0 = eVec12 / L0
+
+    # Finner de deformerte rotasjonene
+    x1, x2, y1, y2 = ex[0], ex[1], ey[0], ey[1]
+    u1, v1, u2, v2 = disp_global[0], disp_global[1], disp_global[3], \
+                     disp_global[4]
+    r1, r2 = disp_global[2], disp_global[5]
+
+    E_xn = [(x2 + u2) - (x1 + u1),
+            (y2 + v2) - (y1 + v1)]
+    E_xn = np.array(E_xn)
+
+    Ld = np.linalg.norm(E_xn)  # Nye lengde
+
+    return Ld
+
 
 def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     """
@@ -149,18 +178,27 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     fle = Kle @ v_local
     T_mat = beam2corot_Te(ex, ey)
 
-    Ke_global = T_mat.T @ Kle @ T_mat
+    # Material
+    Ke_mat = beam2local_stiff(L0, ep)
 
-    fe_int_global = T_mat @ fle
+    # Material and local forces
+    Ke_mat = beam2local_stiff(L0, ep)
+    fe_int_local = Ke_mat @ v_local
 
+    # Finding and creating the local geometric stiffness matrix
+    Ld = L_deformed(ex, ey, disp_global)
 
+    FMat = np.array([[-fe_int_local[1], fe_int_local[0], 0.0, -fe_int_local[4], fe_int_local[3], 0.0]])
+    GMat = np.array([[0.0, -1 / Ld, 0.0, 0.0, 1 / Ld, 0.0]])
+    Ke_geo = (FMat.T @ GMat + GMat.T @ FMat) * 0.5
 
+    # The total local so to say
+    Ke_local = Ke_geo + Ke_mat
 
-    # Kan lett finne de lokale kreftene som
-
-
-    Ke_global = np.zeros((6,6))
-    fe_int_global = np.zeros(6)
+    # Then to the global coordinate system
+    Te = beam2corot_Te(ex_def, ey_def)
+    fe_int_global = Te @ fe_int_local  # A 6x6 matrix
+    Ke_global = Te.T @ Ke_local @ Te  # A 1x6 matrix
 
     return Ke_global, fe_int_global
 
