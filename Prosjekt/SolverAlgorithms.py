@@ -29,30 +29,61 @@ def solveArchLength(model, archLength=0.02, max_steps=50, max_iter=30):
 
     # Getting stiffness matrix
     K_mat = model.get_K_sys(uVec)
-    Lambda = 0.01
+    Lambda = 0.0
     q_Vec = model.get_incremental_load(Lambda)
-    print(q_Vec)
+    print("q_vec når lambda 0", q_Vec)
 
+    print("Current q-vector: ", q_Vec)
+
+    #
+    d_q = np.linalg.solve(K_mat, q_Vec)
+    print("d_q", d_q)
+
+    uVec = d_q * Lambda
 
     # Unit tangent along equilibrium path
     w = np.array([0.5, 0.5])  # for example
     f = math.sqrt(1 + w.T @ w)
 
-
-
     d_q_prev = np.zeros(num_dofs)
 
+    v_global = 0
     for iStep in range(max_steps):
 
-        #TODO: Implement this
+        # TODO: Implement this
 
-        for iIter in range(max_iter):
-
+        delta_v = 0
+        #for iIter in range(max_iter):
+        for iIter in range(1):
             # TODO: Implement this
-            pass
-            res_Vec = model.get_residual(uVec, Lambda)
+
+            # Finn et uttrykk for delta_v
+
+
+
+            # regn ut residual
+            res_Vec = model.get_residual(Lambda, uVec)
+
+            K_mat = model.get_K_sys(uVec)
+            # Displacement som resultat av residual
+            d_r = np.linalg.solve(K_mat, res_Vec)
+
+            # Displacement som resultat av q
+            d_q = np.linalg.solve(K_mat, q_Vec)
+
+
+
+            #uVec += delta_uVec
+
+            #K =
+            #d_r = np.linalg.solve(K, res_Vec)
+
+            # Hvis residual liten nok -> delta_v OK
             if (res_Vec.dot(res_Vec) < 1.0e-15):
                 break
+
+        v_global += delta_v
+        uVec = v_global
 
         model.append_solution(Lambda, uVec)
         print(" ")
