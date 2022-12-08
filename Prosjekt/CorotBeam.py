@@ -191,10 +191,10 @@ def beam2corot_Ke_and_Fe(ex,ey,ep, disp_global):
     GMat = np.array([[0.0, -1 / Ld, 0.0, 0.0, 1 / Ld, 0.0]])
     Ke_geo = (FMat.T @ GMat + GMat.T @ FMat) * 0.5
 
-    # The total local so to say
+    # Total local stiffness matrix
     Ke_local = Ke_geo + Ke_mat
 
-    # Then to the global coordinate system
+    # Transform to global stiffness matrix
     Te = beam2corot_Te(ex_def, ey_def)
     fe_int_global = Te @ fe_int_local  # A 6x6 matrix
     Ke_global = Te.T @ Ke_local @ Te  # A 1x6 matrix
